@@ -1,95 +1,75 @@
-import Image from 'next/image'
-import styles from './page.module.css'
+"use client"
+import { io } from 'socket.io-client'
+import { useEffect, useRef, useState } from 'react';
+import Peer from 'peerjs';
 
 export default function Home() {
+  const socket = io("http://localhost:5000");
+  const [id, setId] = useState("")
+  const selfVideo = useRef(null);
+  const callerVideo = useRef(null);
+  const [stream, setStream] = useState()
+
+
+  const [callAccepted, setCallAccepted] = useState(false);
+  const [callEnded, setCallEnded] = useState(false);
+  const connectionRef = useRef();
+  const [call, setCall] = useState({})
+  const [name, setName] = useState("")
+  const [idToCall, setIdToCall] = useState("")
+  useEffect(() => {
+    navigator.mediaDevices.getUserMedia({video:true, audio:true})
+    .then((currentStream) => {
+      setStream(currentStream);
+      selfVideo.current.srcObject = currentStream;
+    })
+    socket.on('me', (id) => {setId(id)})
+
+    socket.on("callUser", (data) => {
+      debugger;
+      setCall({isReceivingCall:true, from:data.from, name:data.name,signal:data.signal})
+    })
+  }, [])
+
+  const callUser = (idToCall) => {
+    const peer = new Peer({initiator:true, trickle:false, stream});
+
+    peer.on('signal', (data) => {
+      socket.emit("callUser", {userToCall:idToCall, signalData:data, from:id})
+    })
+
+    peer.on('stream', (currentStream) => {
+       callerVideo.current.srcObject = currentStream;
+    })
+
+    socket.on("callAccepted", (signal) => {
+       setCallAccepted(true);
+       peer.signal(signal);
+    })
+
+    connectionRef.current = peer;
+  }
+
+
+
   return (
-    <main className={styles.main}>
-      <div className={styles.description}>
-        <p>
-          Get started by editing&nbsp;
-          <code className={styles.code}>app/page.js</code>
-        </p>
-        <div>
-          <a
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className={styles.vercelLogo}
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
-
-      <div className={styles.center}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
-
-      <div className={styles.grid}>
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Docs <span>-&gt;</span>
-          </h2>
-          <p>Find in-depth information about Next.js features and API.</p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Learn <span>-&gt;</span>
-          </h2>
-          <p>Learn about Next.js in an interactive course with&nbsp;quizzes!</p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Templates <span>-&gt;</span>
-          </h2>
-          <p>Explore the Next.js 13 playground.</p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className={styles.card}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2>
-            Deploy <span>-&gt;</span>
-          </h2>
-          <p>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
+    <div>
+      Merhaba, {id}
+      <br/>
+      <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
+      <br/>
+      <input type="text" value={idToCall} onChange={(e) => setIdToCall(e.target.value)} />
+      <button onClick={() => {
+        socket.emit("callUser",{signal:null, from:id, name:name,to:idToCall})
+      }}>ARA</button>
+      <br/>
+      { call.isReceivingCall && <h3>{call.name} sizi arıyor...</h3> }
+      <br/>
+      <video playsInline autoPlay ref={selfVideo}></video>
+      { (callAccepted && !callEnded)  && <video  playsInline autoPlay ref={callerVideo}></video> }
+    </div>
   )
 }
+
+// npm install peerjs socket.io-client 
+// npm install simple-peer

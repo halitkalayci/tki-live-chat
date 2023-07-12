@@ -1,0 +1,17 @@
+{
+  "name": "livechat-server",
+  "version": "1.0.0",
+  "description": "This is server side of the live chat project",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "tki",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "serve": "^14.2.0",
+    "socket.io": "^4.7.1"
+  }
+}
