@@ -2,16 +2,16 @@
 import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
-
+import './globals.css'
 // React'ın function'ı tekrar tekrar çağırarak state vs değiştirme durumunda 
 // socketin tekrar tanımlanmasını engellemek adına function dışında tanımlanır.
-const socket = io("http://10.104.0.83:5000"); // socketio
+const socket = io("http://93.180.133.207:5000"); // socketio
 export default function Home() {
   const [id, setId] = useState("")
   const selfVideo = useRef(null);
   const callerVideo = useRef(null);
   const [stream, setStream] = useState()
-
+  const audioPlayer = useRef(null);
 
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
@@ -33,8 +33,16 @@ export default function Home() {
     })
   }, [])
 
+  useEffect(() => {
+    if(call.isReceivingCall){
+      audioPlayer.current.load();
+      audioPlayer.current.play();
+    }
+  },[call])
+
   const answerCall = () => {
     setCallAccepted(true);
+    audioPlayer.current.pause();
     // Stream datasını transfer edebilmek adına Peer oluşturuyoruz.
     // initiator:false => çünkü burda cevaplayan biziz yani peer'ın kurucusu biz değiliz.
     // stream => kullanıcının görüntü ve sesi
@@ -96,8 +104,10 @@ export default function Home() {
       <br/>
       { call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></> }
       <br/>
+      <audio ref={audioPlayer} className='d-none' controls src='ringtone.mp3'></audio>
       <video playsInline autoPlay ref={selfVideo}></video>
       { callAccepted  && <video  playsInline autoPlay ref={callerVideo}></video> }
+      <button onClick={leaveCall}>Görüşmeyi Bitir</button>
     </div>
   )
 }
