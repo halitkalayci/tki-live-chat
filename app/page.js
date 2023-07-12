@@ -3,8 +3,10 @@ import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 
+// React'ın function'ı tekrar tekrar çağırarak state vs değiştirme durumunda 
+// socketin tekrar tanımlanmasını engellemek adına function dışında tanımlanır.
+const socket = io("http://10.104.0.83:5000"); // socketio
 export default function Home() {
-  const socket = io("http://localhost:5000");
   const [id, setId] = useState("")
   const selfVideo = useRef(null);
   const callerVideo = useRef(null);
@@ -66,16 +68,16 @@ export default function Home() {
     //socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:null, from:id,name:name})
 
     peer.on('signal', (data) => {
-      socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:data, from:id})
+      socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:data, from:id, name:name})
     })
 
     peer.on('stream', (currentStream) => {
        callerVideo.current.srcObject = currentStream;
     })
 
-    socket.on("callAccepted", (signal) => {
+    socket.on("callAccepted", (data) => {
        setCallAccepted(true);
-       peer.signal(signal);
+       peer.signal(data.signal);
     })
 
     connectionRef.current = peer;
