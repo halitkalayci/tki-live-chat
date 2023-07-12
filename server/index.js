@@ -28,7 +28,6 @@ io.on("connection", (socket) => {
     socket.emit("me", socket.id);
 
     socket.on("callUser", (data) => {
-        console.log(data);
         io.to(data.to).emit("callUser", {signal:data.signalData, from:data.from, name:data.name})
     })
 
@@ -37,7 +36,8 @@ io.on("connection", (socket) => {
     })
 
     socket.on("answerCall", (data) => {
-        io.to(data.to).emit("callAccepted", data.signal);
+        console.log("answering call from:" + data.to);
+        io.to(data.to).emit("callAccepted", data); // 
     })
 
 })
