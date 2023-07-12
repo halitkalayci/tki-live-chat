@@ -1,7 +1,7 @@
 "use client"
 import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
-import Peer from 'peerjs';
+import Peer from 'simple-peer';
 
 export default function Home() {
   const socket = io("http://localhost:5000");
@@ -63,7 +63,7 @@ export default function Home() {
 
   const callUser = (idToCall) => {
     const peer = new Peer({initiator:true, trickle:false, stream});
-    socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:null, from:id,name:name})
+    //socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:null, from:id,name:name})
 
     peer.on('signal', (data) => {
       socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:data, from:id})
@@ -95,7 +95,7 @@ export default function Home() {
       { call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></> }
       <br/>
       <video playsInline autoPlay ref={selfVideo}></video>
-      { (callAccepted && !callEnded)  && <video  playsInline autoPlay ref={callerVideo}></video> }
+      { callAccepted  && <video  playsInline autoPlay ref={callerVideo}></video> }
     </div>
   )
 }

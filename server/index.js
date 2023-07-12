@@ -29,7 +29,7 @@ io.on("connection", (socket) => {
 
     socket.on("callUser", (data) => {
         console.log(data);
-        io.to(data.to).emit("callUser", {signal:data.signal, from:data.from, name:data.name})
+        io.to(data.to).emit("callUser", {signal:data.signalData, from:data.from, name:data.name})
     })
 
     socket.on("disconnect", () => {
