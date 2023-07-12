@@ -26,16 +26,47 @@ export default function Home() {
     socket.on('me', (id) => {setId(id)})
 
     socket.on("callUser", (data) => {
-      debugger;
+      console.log(data);
       setCall({isReceivingCall:true, from:data.from, name:data.name,signal:data.signal})
     })
   }, [])
 
+  const answerCall = () => {
+    setCallAccepted(true);
+    // Stream datasını transfer edebilmek adına Peer oluşturuyoruz.
+    // initiator:false => çünkü burda cevaplayan biziz yani peer'ın kurucusu biz değiliz.
+    // stream => kullanıcının görüntü ve sesi
+    const peer = new Peer({initiator:false, trickle:false, stream});
+
+    // katıldığımız bu peer'da her sinyal alındığında çalışacak fonksiyonu belirliyoruz.
+    peer.on("signal", (data) => {
+      socket.emit("answerCall", {signal:data, to:call.from})
+    })
+
+    // katıldığımız bu peer'da her sinyal alındığında çalışacak fonksiyonu belirliyoruz.
+    peer.on("stream",(currentStream) => {
+      callerVideo.current.srcObject=currentStream;
+    });
+
+    // answer yaptığımız için. Yaptığımız aramanın signal alanını çalıştırıyoruz.
+    peer.signal(call.signal);
+
+    // Bu peer instance'ini bir public değere atamak.
+    connectionRef.current = peer;
+  }
+
+  const leaveCall = () => {
+    setCallEnded(true);
+    connectionRef.current.destroy();
+    window.location.reload() //=> javascriptte sayfayı reload edecek fonksiyon
+  }
+
   const callUser = (idToCall) => {
     const peer = new Peer({initiator:true, trickle:false, stream});
+    socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:null, from:id,name:name})
 
     peer.on('signal', (data) => {
-      socket.emit("callUser", {userToCall:idToCall, signalData:data, from:id})
+      socket.emit("callUser", {to:idToCall, userToCall:idToCall, signalData:data, from:id})
     })
 
     peer.on('stream', (currentStream) => {
@@ -59,11 +90,9 @@ export default function Home() {
       <input type="text" value={name} onChange={(e) => setName(e.target.value)}/>
       <br/>
       <input type="text" value={idToCall} onChange={(e) => setIdToCall(e.target.value)} />
-      <button onClick={() => {
-        socket.emit("callUser",{signal:null, from:id, name:name,to:idToCall})
-      }}>ARA</button>
+      <button onClick={() => {callUser(idToCall)}}>ARA</button>
       <br/>
-      { call.isReceivingCall && <h3>{call.name} sizi arıyor...</h3> }
+      { call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></> }
       <br/>
       <video playsInline autoPlay ref={selfVideo}></video>
       { (callAccepted && !callEnded)  && <video  playsInline autoPlay ref={callerVideo}></video> }
