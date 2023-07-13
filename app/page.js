@@ -3,7 +3,7 @@ import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import './globals.css'
-import { faArrowUpFromBracket, faMicrophoneSlash, faPenNib, faPhoneSlash, faPhoneVolume, faVideoSlash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpFromBracket, faMicrophone, faMicrophoneSlash, faPenNib, faPhoneSlash, faPhoneVolume, faVideoSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // React'ın function'ı tekrar tekrar çağırarak state vs değiştirme durumunda 
 // socketin tekrar tanımlanmasını engellemek adına function dışında tanımlanır.
@@ -16,6 +16,8 @@ export default function Home() {
   const [stream, setStream] = useState()
   const audioPlayer = useRef(null);
 
+  const [muted, setMuted] = useState(false);
+  const [cameraClosed, setCameraClosed] = useState(false)
   const [callAccepted, setCallAccepted] = useState(false);
   const [callEnded, setCallEnded] = useState(false);
   const connectionRef = useRef();
@@ -42,6 +44,17 @@ export default function Home() {
       audioPlayer.current.play();
     }
   }, [call])
+
+  useEffect(() => {
+    checkCameraAndMicrophone();
+  }, [stream])
+
+  const checkCameraAndMicrophone = () => {
+    if(!stream) return;
+        setMuted(!stream.getAudioTracks()[0].enabled);
+        setCameraClosed(!stream.getVideoTracks()[0].enabled);
+        console.log(stream.getAudioTracks())
+  }
 
   const answerCall = () => {
     setCallAccepted(true);
@@ -94,18 +107,21 @@ export default function Home() {
     connectionRef.current = peer;
   }
 
-
+  const toggleMute = (value) => {
+    stream.getAudioTracks()[0].enabled= value;
+    checkCameraAndMicrophone();
+  }
 
   return (
     <div className='container w-75 mt-5'>
       <div className='row w-100'>
         <div className='col-6'>
-        <h3>Halit</h3>
+        <h3>Halit {id}</h3>
         <video muted playsInline autoPlay ref={selfVideo}></video>
         </div>
         <div className='col-6'>
           <h3>Enes</h3>
-        {!callAccepted && <video playsInline autoPlay ref={selfVideo}></video>}
+        {callAccepted && <video playsInline autoPlay ref={callerVideo}></video>}
         </div>
           <div className='col-6 mt-5'>
             <div className='row'>
@@ -133,9 +149,14 @@ export default function Home() {
         <button title='Share Screen' className='btn btn-outline-primary'>
           <FontAwesomeIcon icon={faArrowUpFromBracket} />
         </button>
-        <button title="Mute" className='btn btn-outline-secondary'>
-          <FontAwesomeIcon icon={faMicrophoneSlash} />
+      
+        {
+          muted == true ?   <button onClick={() => toggleMute(true)} title="Mute" className='btn btn-outline-secondary'>
+           <FontAwesomeIcon icon={faMicrophone} /> 
+        </button> :   <button onClick={() => toggleMute(false)} title="Mute" className='btn btn-outline-secondary'>
+          <FontAwesomeIcon icon={faMicrophoneSlash} /> 
         </button>
+        }
         <button title="Turn Off Camera" className='btn btn-outline-warning'>
         <FontAwesomeIcon icon={faVideoSlash}/>
         </button>
