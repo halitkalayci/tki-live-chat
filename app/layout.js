@@ -1,6 +1,8 @@
 import './globals.css'
 import { Inter } from 'next/font/google'
-
+import 'bootstrap/dist/css/bootstrap.min.css'
+// npm install bootstrap
+// npm uninstall bootstrapt 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata = {
