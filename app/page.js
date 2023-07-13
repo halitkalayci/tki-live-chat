@@ -24,17 +24,34 @@ export default function Home() {
   const [call, setCall] = useState({})
   const [name, setName] = useState("")
   const [idToCall, setIdToCall] = useState("")
+  const [analyser, setAnalyser] = useState()
+  const [dataArray, setDataArray] = useState([])
+  const [isTalking, setIsTalking] = useState(false)
   useEffect(() => {
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((currentStream) => {
         setStream(currentStream);
         selfVideo.current.srcObject = currentStream;
+
+        let audioContext = new AudioContext();
+
+        let analyser = audioContext.createAnalyser();
+
+        analyser.fftSize = 2048;
+        let bufferLength = analyser.frequencyBinCount;
+        setDataArray(new Uint8Array(bufferLength));
+
+        let source = audioContext.createMediaStreamSource(currentStream);
+        source.connect(analyser);
+
+        setAnalyser(analyser);
       })
     socket.on('me', (id) => { setId(id) })
 
     socket.on("callUser", (data) => {
       setCall({ isReceivingCall: true, from: data.from, name: data.name, signal: data.signal })
     })
+
   }, [])
 
   useEffect(() => {
@@ -46,7 +63,33 @@ export default function Home() {
 
   useEffect(() => {
     checkCameraAndMicrophone();
+   
   }, [stream])
+
+  useEffect(() => {
+    if (stream && analyser)
+      handleAudioStream();
+  },[stream,analyser])
+
+  const handleAudioStream = () => {
+    if (!stream) return;
+    console.log("Analiz Ediliyor...")
+    analyser.getByteFrequencyData(dataArray);
+
+    let sum = 0;
+    for (let i = 0; i < dataArray.length; i++) {
+      sum += dataArray[i]
+    }
+    let average = sum / dataArray.length;
+    //console.log(average);
+    if(average > 50){
+      console.log("kullanıcı konuşuyor");
+      setIsTalking(true);
+    }else{
+      setIsTalking(false);
+    }
+    requestAnimationFrame(handleAudioStream)
+  }
 
   const checkCameraAndMicrophone = () => {
     if (!stream) return;
@@ -116,7 +159,7 @@ export default function Home() {
   }
 
   const shareScreen = () => {
-    navigator.mediaDevices.getDisplayMedia({video:true,audio:true}).then(currentStream => {
+    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(currentStream => {
       setStream(currentStream);
       selfVideo.current.srcObject = currentStream;
     })
@@ -127,6 +170,7 @@ export default function Home() {
       <div className='row w-100'>
         <div className='col-6'>
           <h3>Halit {id}</h3>
+          <h3>{isTalking ? <p>Konuşuyor</p> : <p>Konuşmuyor</p>}</h3>
           <video muted playsInline autoPlay ref={selfVideo}></video>
         </div>
         <div className='col-6'>
