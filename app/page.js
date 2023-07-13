@@ -3,7 +3,7 @@ import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import './globals.css'
-import { faArrowUpFromBracket, faMicrophone, faMicrophoneSlash, faPenNib, faPhoneSlash, faPhoneVolume, faVideoSlash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpFromBracket, faMicrophone, faMicrophoneSlash, faPenNib, faPhoneSlash, faPhoneVolume, faVideo, faVideoSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // React'ın function'ı tekrar tekrar çağırarak state vs değiştirme durumunda 
 // socketin tekrar tanımlanmasını engellemek adına function dışında tanımlanır.
@@ -50,10 +50,9 @@ export default function Home() {
   }, [stream])
 
   const checkCameraAndMicrophone = () => {
-    if(!stream) return;
-        setMuted(!stream.getAudioTracks()[0].enabled);
-        setCameraClosed(!stream.getVideoTracks()[0].enabled);
-        console.log(stream.getAudioTracks())
+    if (!stream) return;
+    setMuted(!stream.getAudioTracks()[0].enabled);
+    setCameraClosed(!stream.getVideoTracks()[0].enabled);
   }
 
   const answerCall = () => {
@@ -108,62 +107,76 @@ export default function Home() {
   }
 
   const toggleMute = (value) => {
-    stream.getAudioTracks()[0].enabled= value;
+    stream.getAudioTracks()[0].enabled = value;
     checkCameraAndMicrophone();
+  }
+
+  const toggleCamera = (value) => {
+    stream.getVideoTracks()[0].enabled = value;
+    checkCameraAndMicrophone();
+  }
+
+  const shareScreen = () => {
+    navigator.mediaDevices.getDisplayMedia({video:true,audio:true}).then(currentStream => {
+      setStream(currentStream);
+      selfVideo.current.srcObject = currentStream;
+    })
   }
 
   return (
     <div className='container w-75 mt-5'>
       <div className='row w-100'>
         <div className='col-6'>
-        <h3>Halit {id}</h3>
-        <video muted playsInline autoPlay ref={selfVideo}></video>
+          <h3>Halit {id}</h3>
+          <video muted playsInline autoPlay ref={selfVideo}></video>
         </div>
         <div className='col-6'>
           <h3>Enes</h3>
-        {callAccepted && <video playsInline autoPlay ref={callerVideo}></video>}
+          {callAccepted && <video playsInline autoPlay ref={callerVideo}></video>}
         </div>
-          <div className='col-6 mt-5'>
-            <div className='row'>
+        <div className='col-6 mt-5'>
+          <div className='row'>
             <div className='form-group col-3'>
               <label>Name</label>
               <input className='form-control' type="text" value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className='form-group col-3'>
               <label>Aranacak Kişi</label>
-            <input className='form-control' type="text" value={idToCall} onChange={(e) => setIdToCall(e.target.value)} />
+              <input className='form-control' type="text" value={idToCall} onChange={(e) => setIdToCall(e.target.value)} />
             </div>
             <div className='form-group col-3'>
-               <button className='btn btn-primary mt-4 w-100' onClick={() => { callUser(idToCall) }}>
-                <FontAwesomeIcon icon={faPhoneVolume}/> ARA
-                </button>
+              <button className='btn btn-primary mt-4 w-100' onClick={() => { callUser(idToCall) }}>
+                <FontAwesomeIcon icon={faPhoneVolume} /> ARA
+              </button>
             </div>
-            </div>
-        {call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></>}
-        <audio ref={audioPlayer} className='d-none' controls src='ringtone.mp3'></audio>
           </div>
-          <div className='col-6 mt-5 button-list'>
-        <button title='End Call' className='btn btn-outline-danger' onClick={leaveCall}>
-        <FontAwesomeIcon icon={faPhoneSlash}  />
-        </button>
-        <button title='Share Screen' className='btn btn-outline-primary'>
-          <FontAwesomeIcon icon={faArrowUpFromBracket} />
-        </button>
-      
-        {
-          muted == true ?   <button onClick={() => toggleMute(true)} title="Mute" className='btn btn-outline-secondary'>
-           <FontAwesomeIcon icon={faMicrophone} /> 
-        </button> :   <button onClick={() => toggleMute(false)} title="Mute" className='btn btn-outline-secondary'>
-          <FontAwesomeIcon icon={faMicrophoneSlash} /> 
-        </button>
-        }
-        <button title="Turn Off Camera" className='btn btn-outline-warning'>
-        <FontAwesomeIcon icon={faVideoSlash}/>
-        </button>
-          </div>
-        
+          {call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></>}
+          <audio ref={audioPlayer} className='d-none' controls src='ringtone.mp3'></audio>
         </div>
+        <div className='col-6 mt-5 button-list'>
+          <button title='End Call' className='btn btn-outline-danger' onClick={leaveCall}>
+            <FontAwesomeIcon icon={faPhoneSlash} />
+          </button>
+          <button onClick={shareScreen} title='Share Screen' className='btn btn-outline-primary'>
+            <FontAwesomeIcon icon={faArrowUpFromBracket} />
+          </button>
+
+          {
+            muted == true ? <button onClick={() => toggleMute(true)} title="Mute" className='btn btn-outline-secondary'>
+              <FontAwesomeIcon icon={faMicrophoneSlash} />
+            </button> : <button onClick={() => toggleMute(false)} title="Mute" className='btn btn-outline-secondary'>
+              <FontAwesomeIcon icon={faMicrophone} />
+            </button>
+          }
+          {cameraClosed == true ? <button onClick={() => toggleCamera(true)} title="Turn On Camera" className='btn btn-outline-warning'>
+            <FontAwesomeIcon icon={faVideoSlash} />
+          </button> : <button onClick={() => toggleCamera(false)} title="Turn Off Camera" className='btn btn-outline-warning'>
+            <FontAwesomeIcon icon={faVideo} />
+          </button>}
+        </div>
+
       </div>
+    </div>
   )
 }
 
