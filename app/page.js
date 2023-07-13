@@ -3,6 +3,8 @@ import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import './globals.css'
+import { faPenNib, faPhoneSlash } from '@fortawesome/free-solid-svg-icons'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // React'ın function'ı tekrar tekrar çağırarak state vs değiştirme durumunda 
 // socketin tekrar tanımlanmasını engellemek adına function dışında tanımlanır.
 const socket = io("http://localhost:5000"); // socketio
@@ -119,12 +121,13 @@ export default function Home() {
                <button className='btn btn-primary mt-4 w-100' onClick={() => { callUser(idToCall) }}>ARA</button>
             </div>
             </div>
-           
         {call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></>}
         <audio ref={audioPlayer} className='d-none' controls src='ringtone.mp3'></audio>
           </div>
           <div className='col-6 mt-5 button-list'>
-        <button onClick={leaveCall}>Görüşmeyi Bitir</button>
+        <button onClick={leaveCall}>
+        <FontAwesomeIcon icon={faPhoneSlash}  />
+        </button>
         <button>Ekran Paylaş</button>
         <button>Mute</button>
         <button>Kamera Kapat</button>
