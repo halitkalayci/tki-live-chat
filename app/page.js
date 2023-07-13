@@ -33,7 +33,6 @@ export default function Home() {
     socket.on('me', (id) => { setId(id) })
 
     socket.on("callUser", (data) => {
-      console.log(data);
       setCall({ isReceivingCall: true, from: data.from, name: data.name, signal: data.signal })
     })
   }, [])
