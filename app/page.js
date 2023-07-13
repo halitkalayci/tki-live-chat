@@ -3,7 +3,7 @@ import { io } from 'socket.io-client'
 import { useEffect, useRef, useState } from 'react';
 import Peer from 'simple-peer';
 import './globals.css'
-import { faPenNib, faPhoneSlash } from '@fortawesome/free-solid-svg-icons'
+import { faArrowUpFromBracket, faMicrophoneSlash, faPenNib, faPhoneSlash, faPhoneVolume, faVideoSlash } from '@fortawesome/free-solid-svg-icons'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 // React'ın function'ı tekrar tekrar çağırarak state vs değiştirme durumunda 
 // socketin tekrar tanımlanmasını engellemek adına function dışında tanımlanır.
@@ -97,7 +97,7 @@ export default function Home() {
 
 
   return (
-    <div className='container mt-5'>
+    <div className='container w-75 mt-5'>
       <div className='row w-100'>
         <div className='col-6'>
         <h3>Halit</h3>
@@ -118,19 +118,27 @@ export default function Home() {
             <input className='form-control' type="text" value={idToCall} onChange={(e) => setIdToCall(e.target.value)} />
             </div>
             <div className='form-group col-3'>
-               <button className='btn btn-primary mt-4 w-100' onClick={() => { callUser(idToCall) }}>ARA</button>
+               <button className='btn btn-primary mt-4 w-100' onClick={() => { callUser(idToCall) }}>
+                <FontAwesomeIcon icon={faPhoneVolume}/> ARA
+                </button>
             </div>
             </div>
         {call.isReceivingCall && <><h3>{call.name} sizi arıyor...</h3> <button onClick={answerCall}>Cevapla</button></>}
         <audio ref={audioPlayer} className='d-none' controls src='ringtone.mp3'></audio>
           </div>
           <div className='col-6 mt-5 button-list'>
-        <button onClick={leaveCall}>
+        <button title='End Call' className='btn btn-outline-danger' onClick={leaveCall}>
         <FontAwesomeIcon icon={faPhoneSlash}  />
         </button>
-        <button>Ekran Paylaş</button>
-        <button>Mute</button>
-        <button>Kamera Kapat</button>
+        <button title='Share Screen' className='btn btn-outline-primary'>
+          <FontAwesomeIcon icon={faArrowUpFromBracket} />
+        </button>
+        <button title="Mute" className='btn btn-outline-secondary'>
+          <FontAwesomeIcon icon={faMicrophoneSlash} />
+        </button>
+        <button title="Turn Off Camera" className='btn btn-outline-warning'>
+        <FontAwesomeIcon icon={faVideoSlash}/>
+        </button>
           </div>
         
         </div>
