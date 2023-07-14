@@ -10,6 +10,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 const socket = io("http://localhost:5000"); // socketio
 export default function Home() {
   // Ekran Paylaşımı
+  const [userPeer, setUserPeer] = useState()
   const [id, setId] = useState("")
   const selfVideo = useRef(null);
   const callerVideo = useRef(null);
@@ -27,7 +28,14 @@ export default function Home() {
   const [analyser, setAnalyser] = useState()
   const [dataArray, setDataArray] = useState([])
   const [isTalking, setIsTalking] = useState(false)
+  // const [count, setCount] = useState(0)
   useEffect(() => {
+    // setCount(count+1);
+
+    // setCount((prevState) => {
+    //     return prevState+1;
+    // })
+
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
       .then((currentStream) => {
         setStream(currentStream);
@@ -46,7 +54,7 @@ export default function Home() {
 
         setAnalyser(analyser);
       })
-    socket.on('me', (id) => { setId(id) })
+    socket.on('me', (id) => { setId(id); console.log(id); })
 
     socket.on("callUser", (data) => {
       setCall({ isReceivingCall: true, from: data.from, name: data.name, signal: data.signal })
@@ -73,7 +81,6 @@ export default function Home() {
 
   const handleAudioStream = () => {
     if (!stream) return;
-    console.log("Analiz Ediliyor...")
     analyser.getByteFrequencyData(dataArray);
 
     let sum = 0;
@@ -83,7 +90,6 @@ export default function Home() {
     let average = sum / dataArray.length;
     //console.log(average);
     if(average > 50){
-      console.log("kullanıcı konuşuyor");
       setIsTalking(true);
     }else{
       setIsTalking(false);
@@ -107,6 +113,7 @@ export default function Home() {
 
     // katıldığımız bu peer'da her sinyal alındığında çalışacak fonksiyonu belirliyoruz.
     peer.on("signal", (data) => {
+      debugger;
       socket.emit("answerCall", { signal: data, to: call.from })
     })
 
@@ -120,6 +127,8 @@ export default function Home() {
 
     // Bu peer instance'ini bir public değere atamak.
     connectionRef.current = peer;
+    setUserPeer(peer);
+    console.log(userPeer);
   }
 
   const leaveCall = () => {
@@ -146,6 +155,8 @@ export default function Home() {
     })
 
     connectionRef.current = peer;
+    setUserPeer(peer);
+    console.log(userPeer);
   }
 
   const toggleMute = (value) => {
@@ -159,9 +170,22 @@ export default function Home() {
   }
 
   const shareScreen = () => {
+    console.log(userPeer);
     navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(currentStream => {
+      debugger;
       setStream(currentStream);
       selfVideo.current.srcObject = currentStream;
+
+      userPeer.replaceTrack(stream.getVideoTracks()[0], currentStream.getVideoTracks()[0], stream);
+      setStream((prevStream) => {
+        prevStream.getVideoTracks().forEach(track => {
+          track.stop();
+          prevStream.removeTrack(track);
+        });
+        console.log(currentStream);
+        prevStream.addTrack(currentStream.getVideoTracks()[0]);
+        return prevStream;
+      })
     })
   }
 
