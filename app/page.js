@@ -170,22 +170,17 @@ export default function Home() {
   }
 
   const shareScreen = async () => {
-    console.log(userPeer);
-    let currentStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-    console.log(currentStream);
-    setStream(currentStream);
-    selfVideo.current.srcObject = currentStream;
+    let mediaStreams =await navigator.mediaDevices.getDisplayMedia({video:true,audio:true})
+    userPeer.replaceTrack(stream.getVideoTracks()[0], mediaStreams.getVideoTracks()[0], stream);
 
-    userPeer.replaceTrack(stream.getVideoTracks()[0], currentStream.getVideoTracks()[0], stream);
     setStream((prevStream) => {
-      prevStream.getVideoTracks().forEach(track => {
+      prevStream.getVideoTracks().forEach((track) => {
         track.stop();
         prevStream.removeTrack(track);
       });
-      if(currentStream.getVideoTracks().length > 0)
-        prevStream.addTrack(currentStream.getVideoTracks()[0]);
+      prevStream.addTrack(mediaStreams.getVideoTracks()[0]);
       return prevStream;
-    })
+    });
   }
 
   return (
