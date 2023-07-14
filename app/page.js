@@ -169,23 +169,22 @@ export default function Home() {
     checkCameraAndMicrophone();
   }
 
-  const shareScreen = () => {
+  const shareScreen = async () => {
     console.log(userPeer);
-    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(currentStream => {
-      debugger;
-      setStream(currentStream);
-      selfVideo.current.srcObject = currentStream;
+    let currentStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+    console.log(currentStream);
+    setStream(currentStream);
+    selfVideo.current.srcObject = currentStream;
 
-      userPeer.replaceTrack(stream.getVideoTracks()[0], currentStream.getVideoTracks()[0], stream);
-      setStream((prevStream) => {
-        prevStream.getVideoTracks().forEach(track => {
-          track.stop();
-          prevStream.removeTrack(track);
-        });
-        console.log(currentStream);
+    userPeer.replaceTrack(stream.getVideoTracks()[0], currentStream.getVideoTracks()[0], stream);
+    setStream((prevStream) => {
+      prevStream.getVideoTracks().forEach(track => {
+        track.stop();
+        prevStream.removeTrack(track);
+      });
+      if(currentStream.getVideoTracks().length > 0)
         prevStream.addTrack(currentStream.getVideoTracks()[0]);
-        return prevStream;
-      })
+      return prevStream;
     })
   }
 
